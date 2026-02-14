@@ -107,8 +107,8 @@
 
                 if (doc.exists) {
                     const data = doc.data();
-                    window.open(data.pdfUrl, '_blank');
-                    generateCaptcha();
+                    window.location.href = data.pdfUrl;
+                      generateCaptcha();
                 } else {
                     errorMsg.innerText = "Roll Number not found.";
                     errorMsg.classList.remove('hidden');
