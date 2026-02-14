@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success Point - View Result</title>
+    <link rel="icon" href="/logo.png">
+    <style>
+        /* यह PDF को पूरे स्क्रीन पर फैला देगा, और कुछ नहीं दिखेगा */
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #333; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+    <iframe id="fullPdf" src=""></iframe>
+
+    <script>
+        // पुरानी सीक्रेट मेमोरी से लिंक निकालो
+        const pdfUrl = sessionStorage.getItem('pdfLink');
+        
+        if(pdfUrl) {
+            // मोबाइल और कंप्यूटर दोनों के लिए Google Docs व्यूअर लगा दिया
+            document.getElementById('fullPdf').src = `https://docs.google.com/gview?url=${pdfUrl}&embedded=true`;
+        } else {
+            // अगर कोई डायरेक्ट इस पेज पर आ गया तो उसे एरर दिखा दो
+            document.body.innerHTML = "<h2 style='color:white; text-align:center; font-family:sans-serif; margin-top:20%;'>No Result Found! Please go back and search your Roll Number.</h2>";
+        }
+    </script>
+</body>
+</html>
