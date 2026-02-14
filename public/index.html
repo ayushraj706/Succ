@@ -22,6 +22,8 @@
         <p class="text-xl text-gray-600 mb-10">Check your official coaching results securely and instantly.</p>
         <button onclick="showSearch()" class="bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-8 rounded-full shadow-xl text-lg transition-transform hover:scale-105">
             Get Started 🚀
+        <button id="installAppBtn" class="hidden mx-auto mt-6 text-green-700 font-bold text-lg underline hover:text-green-800 transition-colors">
+    ⬇️ Install App on Home Screen
         </button>
     </main>
 
@@ -49,7 +51,7 @@
             <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-medium">Roll Number not found or Captcha incorrect.</p>
         </div>
     </main>
-
+    
     <script>
         // --- Firebase Setup ---
         const firebaseConfig = {
@@ -117,14 +119,34 @@
                 console.error("Error:", error);
             } finally {
                 btn.innerHTML = '<span>View Result</span>';
-            }
+            // PWA Install Prompt Logic
+let deferredPrompt;
+const installBtn = document.getElementById('installAppBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // ब्राउज़र के ऑटोमैटिक पॉपअप को रोको
+    e.preventDefault();
+    // इवेंट को सेव करो ताकि बटन दबाने पर काम आये
+    deferredPrompt = e;
+    // हमारा कस्टम Install बटन दिखाओ
+    installBtn.classList.remove('hidden');
+});
+
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt !== null) {
+        // इंस्टॉल वाला पॉपअप दिखाओ
+        deferredPrompt.prompt();
+        // चेक करो कि यूज़र ने इंस्टॉल किया या कैंसिल
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('App Installed! 🎉');
         }
-    // PWA App Install Logic
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(() => {
-        console.log("App Mode Ready!");
-    });
-}
+        // काम हो गया, अब प्रॉम्प्ट को खाली कर दो और बटन छुपा दो
+        deferredPrompt = null;
+        installBtn.classList.add('hidden');
+    }
+});
+                
         
     </script>
 </body>
