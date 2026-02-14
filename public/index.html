@@ -119,6 +119,13 @@
                 btn.innerHTML = '<span>View Result</span>';
             }
         }
+    // PWA App Install Logic
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(() => {
+        console.log("App Mode Ready!");
+    });
+}
+        
     </script>
 </body>
 </html>
