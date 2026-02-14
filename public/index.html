@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,82 +8,107 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/logo.png">
-    <meta name="theme-color" content="#16a34a">
+    <meta name="theme-color" content="#006642">
 
     <style>
-        .achievement-popup {
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            border: 4px solid #fff;
-            box-shadow: 0 0 50px rgba(255, 165, 0, 0.8);
+        /* Meta Style Green Button */
+        .btn-meta {
+            background-color: #006642; 
+            color: white;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-meta:hover {
+            background-color: #004d32;
+        }
+
+        /* GitHub Style Linear Loading Bar */
+        .loading-container {
+            position: relative;
+            overflow: hidden;
+        }
+        .loading-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background-color: #ffffff;
+            width: 30%;
+            animation: github-loading 1.5s infinite linear;
+            display: none;
+        }
+        @keyframes github-loading {
+            0% { left: -30%; }
+            100% { left: 100%; }
+        }
+
+        /* Top-Down Red Install Prompt */
+        #installBanner {
+            position: fixed;
+            top: -100px;
+            left: 0;
+            width: 100%;
+            background-color: #dc2626; /* लाल रंग */
+            color: white;
+            padding: 15px;
+            text-align: center;
+            z-index: 100;
+            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col justify-center overflow-x-hidden">
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col justify-center">
+
+    <div id="installBanner" class="flex justify-center items-center gap-4">
+        <span class="font-bold text-sm md:text-base">Install Success Point App for better experience</span>
+        <button onclick="triggerInstall()" class="bg-white text-red-600 px-4 py-1 rounded font-bold text-sm">Install</button>
+    </div>
 
     <main id="landingScreen" class="max-w-4xl mx-auto px-4 py-16 text-center w-full block">
         <img src="logo.png" alt="Success Point Logo" class="w-28 h-28 mx-auto mb-6 rounded-full shadow-lg border-4 border-white">
-        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
-           Welcome to <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-green-700">Success Point</span>
+        
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
+           Welcome to Success Point
         </h1>
-        <p class="text-xl text-gray-600 mb-10">Check your official coaching results securely and instantly.</p>
-        <button onclick="handleGetStarted()" class="bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-8 rounded-full shadow-xl text-lg transition-transform hover:scale-105">
-            Get Started 🚀
+        <p class="text-lg text-gray-600 mb-10">Check your official coaching results securely and instantly.</p>
+        
+        <button onclick="showSearch()" class="btn-meta py-4 px-10 rounded-lg shadow-lg text-lg transform hover:scale-105">
+            Get Started
         </button>
-        <br> 
-        <button id="installAppBtn" class="hidden mx-auto mt-8 text-green-700 font-bold text-lg border-2 border-green-600 px-6 py-2 rounded-full hover:bg-green-50 transition-colors">
-            ⬇️ Install App on Home Screen
-        </button>
-    </main>
-
-    <main id="videoScreen" class="max-w-4xl mx-auto px-4 py-16 text-center w-full hidden">
-        <h2 class="text-2xl font-bold mb-6 text-orange-600">Special Tutorial Video 🎥</h2>
-        <div class="max-w-md mx-auto bg-black rounded-2xl shadow-xl overflow-hidden border-4 border-orange-400">
-            <video id="tutorialVideo" class="w-full" controls playsinline>
-                <source src="YOUR_VIDEO_LINK_HERE.mp4" type="video/mp4">
-            </video>
-        </div>
-        <button onclick="finishVideo()" class="mt-6 bg-gray-200 py-2 px-6 rounded-full font-bold hover:bg-gray-300">Skip Tutorial >></button>
     </main>
 
     <main id="searchScreen" class="max-w-4xl mx-auto px-4 py-16 text-center w-full hidden">
         <h2 class="text-3xl font-bold mb-8">Success Point Results</h2>
+        
         <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-left">
             <div class="mb-5">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Roll Code</label>
-                <input type="text" id="rollInput" placeholder="Enter Roll No." class="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-green-500 outline-none">
+                <input type="tel" id="rollInput" placeholder="Enter Roll No." class="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-green-500 outline-none">
             </div>
+            
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Verify you are human</label>
                 <div class="flex gap-4 items-center">
-                    <div id="captchaBox" class="bg-gray-200 px-4 py-3 rounded-lg font-mono font-bold text-lg tracking-widest text-gray-800 w-1/2 text-center select-none"></div>
-                    <input type="text" id="captchaInput" placeholder="?" class="w-1/2 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-green-500 outline-none">
+                    <div id="captchaBox" class="bg-gray-200 px-4 py-3 rounded-lg font-mono font-bold text-lg text-gray-800 w-1/2 text-center select-none"></div>
+                    <input type="tel" id="captchaInput" placeholder="Result" class="w-1/2 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-green-500 outline-none">
                 </div>
             </div>
-            <button onclick="searchResult()" id="searchBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg">View Result</button>
-            <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-medium">Roll Number not found or Captcha incorrect.</p>
+            
+            <button onclick="searchResult()" id="searchBtn" class="btn-meta w-full py-3 px-4 rounded-lg shadow-lg relative loading-container overflow-hidden">
+                <span id="btnText">View Result</span>
+                <div id="loadingLine" class="loading-bar"></div>
+            </button>
+            
+            <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-medium text-center">Roll Number not found or Captcha incorrect.</p>
         </div>
     </main>
-
-    <div id="achievementOverlay" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-4">
-        <div class="achievement-popup animate__animated animate__zoomInDown text-center p-10 rounded-3xl max-w-sm">
-            <div class="text-7xl mb-4">🏆</div>
-            <h2 class="text-4xl font-black text-white uppercase tracking-tighter mb-2">ACE ACHIEVER!</h2>
-            <p class="text-white font-bold text-xl mb-8">Congratulations! Your result is ready.</p>
-            <button onclick="closeAchievement()" class="bg-white text-orange-600 font-black py-4 px-10 rounded-full shadow-2xl hover:scale-110 transition-transform text-lg">
-                OPEN RESULT 🚀
-            </button>
-        </div>
-    </div>
-
-    <audio id="victorySound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
-
+    
     <script>
-        // --- Firebase Config ---
+        // --- 1. Firebase Setup ---
         const firebaseConfig = {
             apiKey: "AIzaSyCCqWVSgULjZtgfOqVX3CBmOonxkr2UB7g",
             authDomain: "whatsapp-950a8.firebaseapp.com",
@@ -93,59 +118,92 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- Video Logic ---
-        function handleGetStarted() {
-            const hasSeen = localStorage.getItem('seenVideo');
-            if (hasSeen === 'true') { showSearchScreen(); } 
-            else { 
-                document.getElementById('landingScreen').classList.add('hidden');
-                document.getElementById('videoScreen').classList.remove('hidden');
-            }
-        }
+        // --- 2. UI Logic ---
+        let correctAnswer = 0;
 
-        function finishVideo() {
-            localStorage.setItem('seenVideo', 'true');
-            showSearchScreen();
-        }
-
-        function showSearchScreen() {
+        function showSearch() {
             document.getElementById('landingScreen').classList.add('hidden');
-            document.getElementById('videoScreen').classList.add('hidden');
             document.getElementById('searchScreen').classList.remove('hidden');
+            document.getElementById('searchScreen').classList.add('block');
             generateCaptcha();
         }
 
-        // --- Search Logic ---
-        let correctAnswer = 0;
         function generateCaptcha() {
-            let n1 = Math.floor(Math.random()*10)+1, n2 = Math.floor(Math.random()*10)+1;
-            correctAnswer = n1 + n2;
-            document.getElementById('captchaBox').innerText = `${n1} + ${n2} =`;
+            let num1 = Math.floor(Math.random() * 10) + 1;
+            let num2 = Math.floor(Math.random() * 10) + 1;
+            correctAnswer = num1 + num2;
+            document.getElementById('captchaBox').innerText = `${num1} + ${num2} =`;
+            document.getElementById('captchaInput').value = '';
         }
 
         async function searchResult() {
             const roll = document.getElementById('rollInput').value;
-            const ans = parseInt(document.getElementById('captchaInput').value);
-            if(ans !== correctAnswer) return alert("Wrong Captcha!");
-
-            document.getElementById('searchBtn').innerText = "Searching...";
-            const doc = await db.collection("results").doc(roll).get();
-
-            if (doc.exists) {
-                sessionStorage.setItem('pdfLink', doc.data().pdfUrl);
-                // PUBG Animation + Confetti + Sound
-                document.getElementById('achievementOverlay').classList.remove('hidden');
-                document.getElementById('victorySound').play();
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            } else {
-                document.getElementById('errorMsg').classList.remove('hidden');
+            const userAnswer = parseInt(document.getElementById('captchaInput').value);
+            const btnText = document.getElementById('btnText');
+            const loadingLine = document.getElementById('loadingLine');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if(userAnswer !== correctAnswer) {
+                alert("Incorrect Captcha Answer");
+                generateCaptcha();
+                return;
             }
-            document.getElementById('searchBtn').innerText = "View Result";
+
+            if(!roll) return alert("Please enter Roll Code");
+
+            // --- GitHub Style Loading Animation Start ---
+            btnText.innerText = 'Searching...';
+            loadingLine.style.display = 'block';
+            errorMsg.classList.add('hidden');
+
+            try {
+                const docRef = db.collection("results").doc(roll);
+                const doc = await docRef.get();
+
+                if (doc.exists) {
+                    const data = doc.data();
+                    sessionStorage.setItem('pdfLink', data.pdfUrl);
+                    window.open('/view.html', '_blank'); 
+                    generateCaptcha();
+                } else {
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            } finally {
+                // --- Animation Reset ---
+                btnText.innerText = 'View Result';
+                loadingLine.style.display = 'none';
+            }
+        } 
+
+        // --- 3. Red Install Banner Logic (Top Down) ---
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // 2 सेकंड बाद ऊपर से स्लाइड होकर आएगा
+            setTimeout(() => {
+                installBanner.style.top = '0';
+            }, 2000);
+        });
+
+        function triggerInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        installBanner.style.top = '-100px';
+                    }
+                    deferredPrompt = null;
+                });
+            }
         }
 
-        function closeAchievement() {
-            document.getElementById('achievementOverlay').classList.add('hidden');
-            window.open('/view.html', '_blank'); // Open result in your custom viewer
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch((err) => console.log("SW Error: ", err));
         }
     </script>
 </body>
