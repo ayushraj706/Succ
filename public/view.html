@@ -5,26 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Success Point - View Result</title>
     <link rel="icon" href="/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    
     <style>
-        /* यह PDF को पूरे स्क्रीन पर फैला देगा, और कुछ नहीं दिखेगा */
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #333; }
-        iframe { width: 100%; height: 100%; border: none; }
+        /* हेडर को ऊपर फिक्स किया गया है */
+        #header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background-color: #ffffff; display: flex; justify-content: center;
+            align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 50;
+        }
+        /* PDF के पन्नों के लिए जगह */
+        #pdfContainer {
+            margin-top: 90px; 
+            display: flex; flex-direction: column; align-items: center;
+            padding-bottom: 20px;
+        }
+        /* हर पन्ना एक शानदार डिब्बे (Canvas) में दिखेगा */
+        canvas {
+            margin-bottom: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            max-width: 95%; 
+            border-radius: 8px;
+        }
     </style>
 </head>
-<body>
-    <iframe id="fullPdf" src=""></iframe>
+<body class="bg-gray-200">
+
+    <div id="header">
+        <button onclick="downloadPDF()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-transform hover:scale-105 text-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Download PDF
+        </button>
+    </div>
+
+    <div id="pdfContainer">
+        <p id="loadingMsg" class="text-xl font-bold mt-10 text-gray-700 animate-pulse">Loading Result... ⏳</p>
+    </div>
 
     <script>
-        // पुरानी सीक्रेट मेमोरी से लिंक निकालो
         const pdfUrl = sessionStorage.getItem('pdfLink');
         
-        if(pdfUrl) {
-            // मोबाइल और कंप्यूटर दोनों के लिए Google Docs व्यूअर लगा दिया
-            document.getElementById('fullPdf').src = `https://docs.google.com/gview?url=${pdfUrl}&embedded=true`;
+        if (!pdfUrl) {
+            document.getElementById('pdfContainer').innerHTML = "<h2 class='text-red-600 mt-10 text-2xl font-bold'>परिणाम नहीं मिला! कृपया वापस जाकर सर्च करें।</h2>";
+            document.getElementById('header').style.display = 'none';
         } else {
-            // अगर कोई डायरेक्ट इस पेज पर आ गया तो उसे एरर दिखा दो
-            document.body.innerHTML = "<h2 style='color:white; text-align:center; font-family:sans-serif; margin-top:20%;'>No Result Found! Please go back and search your Roll Number.</h2>";
+            // PDF.js का वर्कर सेट करो
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+            // PDF लोड करना शुरू करो
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            loadingTask.promise.then(function(pdf) {
+                // लोडिंग वाला मैसेज हटा दो
+                document.getElementById('loadingMsg').style.display = 'none'; 
+                
+                // PDF के हर पन्ने (Page) को एक-एक करके निकालो और स्क्रीन पर छापो
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    pdf.getPage(pageNum).then(function(page) {
+                        // मोबाइल के लिए साइज़ सेट करो
+                        let scale = window.innerWidth < 600 ? 1.2 : 1.5;
+                        const viewport = page.getViewport({ scale: scale });
+
+                        // एक नया Canvas (ड्रॉइंग बोर्ड) बनाओ
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        // Canvas को स्क्रीन पर लगा दो
+                        document.getElementById('pdfContainer').appendChild(canvas);
+
+                        // पन्ने को Canvas पर रेंडर (छाप) कर दो
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+                        page.render(renderContext);
+                    });
+                }
+            }).catch(function(error) {
+                console.error("Error loading PDF: ", error);
+                document.getElementById('loadingMsg').innerText = "❌ Error Loading PDF. Please use the Download button above.";
+            });
+        }
+
+        function downloadPDF() {
+            if(pdfUrl) {
+                window.open(pdfUrl, '_blank'); // डाउनलोड करने के लिए सीधा लिंक
+            }
         }
     </script>
 </body>
 </html>
+
