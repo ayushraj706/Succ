@@ -55,10 +55,6 @@
             
             <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-medium">Roll Number not found or Captcha incorrect.</p>
         </div>
-
-        <div id="pdfViewer" class="max-w-3xl mx-auto mt-8 hidden w-full h-[600px] border-4 border-green-500 rounded-lg overflow-hidden shadow-2xl">
-            <iframe id="pdfFrame" class="w-full h-full" src=""></iframe>
-        </div>
     </main>
     
     <script>
@@ -114,16 +110,14 @@
                 if (doc.exists) {
                     const data = doc.data();
                     
-                    // 4. यहाँ है असली जादू! लिंक को फ्रेम के अंदर डाला जा रहा है।
-                    document.getElementById('pdfFrame').src = data.pdfUrl;
-                    document.getElementById('pdfViewer').classList.remove('hidden');
+                    // सीक्रेट मेमोरी में लिंक सेव करके नया पेज (view.html) खोलो
+                    sessionStorage.setItem('pdfLink', data.pdfUrl);
+                    window.open('/view.html', '_blank');
                     
-                    generateCaptcha(); // कैप्चा रीसेट
+                    generateCaptcha(); // सुरक्षा के लिए कैप्चा रीसेट
                 } else {
                     errorMsg.innerText = "Roll Number not found.";
                     errorMsg.classList.remove('hidden');
-                    // अगर गलत रोल नंबर है तो पुराना PDF छुपा दो
-                    document.getElementById('pdfViewer').classList.add('hidden');
                 }
             } catch (error) {
                 console.error("Error:", error);
