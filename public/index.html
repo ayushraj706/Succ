@@ -51,6 +51,9 @@
             <button onclick="searchResult()" id="searchBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg flex justify-center items-center gap-2">
                 <span>View Result</span>
             </button>
+            <div id="pdfViewer" class="mt-8 hidden w-full h-[500px] border-4 border-green-500 rounded-lg overflow-hidden shadow-2xl">
+    <iframe id="pdfFrame" class="w-full h-full" src=""></iframe>
+            </div>
             <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-medium">Roll Number not found or Captcha incorrect.</p>
         </div>
     </main>
