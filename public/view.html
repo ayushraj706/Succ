@@ -9,29 +9,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     
     <style>
-        /* Bihar Board Style Header */
         #header {
             position: fixed; top: 0; left: 0; width: 100%; height: 60px;
             background-color: #f8f9fa; display: flex; justify-content: space-between;
             align-items: center; padding: 0 20px; border-bottom: 2px solid #dee2e6; z-index: 50;
         }
-        
-        #pdfContainer {
-            margin-top: 80px; 
-            display: flex; flex-direction: column; align-items: center;
-            padding-bottom: 20px; background-color: #e9ecef;
+        #resultContainer {
+            margin-top: 80px; display: flex; flex-direction: column; align-items: center;
+            padding-bottom: 20px; background-color: #e9ecef; min-height: 100vh;
         }
-        
-        canvas {
+        canvas, img {
             margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             max-width: 95%; background-color: white; border: 1px solid #ccc;
-        }
-
-        /* Print karte time Header aur background hata do */
-        @media print {
-            #header { display: none !important; }
-            body, #pdfContainer { background-color: white !important; margin-top: 0 !important; }
-            canvas { box-shadow: none !important; border: none !important; margin-bottom: 0 !important; }
         }
     </style>
 </head>
@@ -40,62 +29,59 @@
     <div id="header">
         <div class="font-bold text-gray-700 text-lg">Result Portal</div>
         <div class="flex gap-3">
-            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded shadow text-sm flex items-center gap-1">
-                🖨️ Print
-            </button>
-            <button onclick="forceDownload()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-4 rounded shadow text-sm flex items-center gap-1">
-                ⬇️ Download
-            </button>
+            <button onclick="window.print()" class="bg-blue-600 text-white font-bold py-1.5 px-4 rounded shadow text-sm">🖨️ Print</button>
+            <button onclick="forceDownload()" class="bg-green-600 text-white font-bold py-1.5 px-4 rounded shadow text-sm">⬇️ Download</button>
         </div>
     </div>
 
-    <div id="pdfContainer">
+    <div id="resultContainer">
         <p id="loadingMsg" class="text-xl font-bold mt-10 text-gray-700 animate-pulse">Loading Result... ⏳</p>
     </div>
 
     <script>
-        const pdfUrl = sessionStorage.getItem('pdfLink');
+        const fileUrl = sessionStorage.getItem('pdfLink');
+        const container = document.getElementById('resultContainer');
+        const loadingMsg = document.getElementById('loadingMsg');
         
-        if (!pdfUrl) {
-            document.getElementById('pdfContainer').innerHTML = "<h2 class='text-red-600 mt-10 text-xl font-bold'>No Result Found! Please go back.</h2>";
-            document.getElementById('header').style.display = 'none';
+        if (!fileUrl) {
+            container.innerHTML = "<h2 class='text-red-600 mt-10 text-xl font-bold'>No Result Found!</h2>";
         } else {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+            // चेक करो कि फाइल PDF है या Photo (JPG/PNG)
+            const isImage = fileUrl.toLowerCase().match(/\.(jpg|jpeg|png|webp|gif|avif)/i);
 
-            const loadingTask = pdfjsLib.getDocument(pdfUrl);
-            loadingTask.promise.then(function(pdf) {
-                document.getElementById('loadingMsg').style.display = 'none'; 
-                
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    pdf.getPage(pageNum).then(function(page) {
-                        let scale = window.innerWidth < 600 ? 1.2 : 1.5;
-                        const viewport = page.getViewport({ scale: scale });
-
-                        const canvas = document.createElement('canvas');
-                        const context = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-
-                        document.getElementById('pdfContainer').appendChild(canvas);
-
-                        const renderContext = { canvasContext: context, viewport: viewport };
-                        page.render(renderContext);
-                    });
-                }
-            }).catch(function(error) {
-                console.error("Error:", error);
-                document.getElementById('loadingMsg').innerText = "Error Loading PDF.";
-            });
+            if (isImage) {
+                // अगर फोटो है तो सीधा <img> टैग में दिखाओ
+                const img = document.createElement('img');
+                img.src = fileUrl;
+                loadingMsg.style.display = 'none';
+                container.appendChild(img);
+            } else {
+                // अगर PDF है तो पुराना PDF.js वाला तरीका चलाओ
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                pdfjsLib.getDocument(fileUrl).promise.then(function(pdf) {
+                    loadingMsg.style.display = 'none'; 
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        pdf.getPage(pageNum).then(function(page) {
+                            let scale = window.innerWidth < 600 ? 1.2 : 1.5;
+                            const viewport = page.getViewport({ scale: scale });
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            container.appendChild(canvas);
+                            page.render({ canvasContext: context, viewport: viewport });
+                        });
+                    }
+                }).catch(err => {
+                    loadingMsg.innerText = "Error Loading PDF.";
+                });
+            }
         }
 
-        // Yahan hai Direct Download ka Asli Jadu!
         function forceDownload() {
-            if(pdfUrl) {
-                // Cloudinary ke link me '/upload/' ki jagah '/upload/fl_attachment/' lagane se file direct download hoti hai
-                const directDownloadUrl = pdfUrl.replace('/upload/', '/upload/fl_attachment/');
-                
-                // Bina naya tab khole file device me save hone lagegi
-                window.location.href = directDownloadUrl;
+            if(fileUrl) {
+                const directUrl = fileUrl.replace('/upload/', '/upload/fl_attachment/');
+                window.location.href = directUrl;
             }
         }
     </script>
