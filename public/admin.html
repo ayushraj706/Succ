@@ -44,7 +44,7 @@
         const myWidget = cloudinary.createUploadWidget({
             cloudName: 'dprbizfao', 
             uploadPreset: 'w7rfbhdb',
-            clientAllowedFormats: ['pdf'],
+            clientAllowedFormats: ["pdf", "jpg", "jpeg", "png"],
             multiple: false
         }, (error, result) => { 
             if (!error && result && result.event === "success") { 
